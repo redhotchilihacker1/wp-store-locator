@@ -1,0 +1,60 @@
+<?php
+/**
+ * Appearance Editor Page Template
+ *
+ * @since  3.0.0
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+// Get required services
+$wpsl_settings    = wpsl_get_service( 'wpsl_settings' );
+$settings_service = wpsl_get_service( 'settings_service' );
+$appearance       = wpsl_get_service( 'appearance' );
+$admin_settings   = wpsl_get_service( 'admin_settings' );
+
+// Get appearance settings
+$section_settings = $wpsl_settings->get_group( 'appearance' );
+$template_id = $wpsl_settings->get( 'appearance', 'template_id' );
+?>
+
+<script>(function(){if(sessionStorage.getItem('wpsl_reopen_tab')||/^#wpsl-[a-z-]+-tab$/.test(location.hash)){document.documentElement.classList.add('wpsl-restoring-tab');}})();</script>
+<div id="wpsl-content-wrap" class="wpsl-settings-grid wpsl-appearance-editor">
+    <div class="wpsl-appearance-nav" id="wpsl-appearance-nav">
+        <div class="wpsl-appearance-view wpsl-hidden" id="wpsl-menu-view">
+            <nav>
+                <ul id="wpsl-appearance-tabs">
+                    <li data-id="templates"><a href="#wpsl-templates-tab"><span class="wpsl-icon-theme"><?php esc_html_e( 'Themes', 'wp-store-locator' ); ?></span></a></li>
+                    <?php echo $appearance->get_menu(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Method already escapes output ?>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Tab Content Views -->
+        <div id="wpsl-settings-content">
+            <form id="wpsl-appearance-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" autocomplete="off" accept-charset="utf-8">
+                <input type="hidden" name="action" value="wpsl_save_appearance">
+                <?php wp_nonce_field( 'wpsl-save-appearance', 'wpsl_save_appearance_nonce' ); ?>
+                <?php echo $appearance->get_tab_content(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Method already escapes output ?>
+            </form>
+        </div>
+    </div>
+
+    <?php
+    /*
+     * The example categories are always in the preview markup. Hidden from the
+     * first paint while "Show categories?" is off, so they don't show until
+     * bindCategoryOptions() in wpsl-handlers.js gets to it.
+     */
+    $hide_categories = empty( $section_settings['categories']['enabled'] ) ? ' class="wpsl-hide-categories"' : '';
+    ?>
+    <div id="wpsl-appearance-preview"<?php echo $hide_categories; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed string ?> data-template="<?php echo esc_attr( $template_id ); ?>">
+        <div id="wpsl-default-view" class="wpsl-appearance-view wpsl-customize-options" >
+            <div class="wpsl-styled-template-preview<?php echo $wpsl_settings->get( 'tools', 'disable_v3_css' ) ? '' : ' wpsl-v3-css'; ?>">
+                <?php echo $appearance->get_template( $template_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Method already escapes output ?>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,456 @@
+=== WP Store Locator ===
+Plugin URI: https://wpstorelocator.co
+Contributors: tijmensmit
+Tags: store locator, google maps, openstreetmap, store finder, dealer locator
+Requires at least: 5.7
+Tested up to: 7.1
+Requires PHP: 7.4
+Stable tag: 3.1.1
+License: GPLv3
+License URI: http://www.gnu.org/licenses/gpl.html
+
+Free store locator with OpenStreetMap maps and no API key. Or use Google Maps, Mapbox or Stadia Maps. Unlimited locations, custom fields and markers.
+
+== Description ==
+
+**WP Store Locator** is a free store locator that helps your customers find your nearest store, dealer, branch, clinic or office. It runs on free OpenStreetMap maps out of the box, so there is no API key, no Google account and no credit card to set up. Add unlimited locations, drop the `[wpsl]` shortcode or block on a page, and visitors can search by address, postcode, city or their current position, filter by category and get directions.
+
+> 👉 **[Try the live demo](https://wpstorelocator.co/demo/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator&utm_content=top-links)** · [Documentation](https://wpstorelocator.co/documentation/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator&utm_content=top-links) · [Getting started](https://wpstorelocator.co/documentation/getting-started/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator&utm_content=top-links) · [Add-ons](https://wpstorelocator.co/add-ons/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator&utm_content=top-links) · [Add-on Bundle](https://wpstorelocator.co/bundles/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator&utm_content=top-links)
+
+= 🆓 Free maps, no API key needed =
+
+Choose OpenStreetMap and your store locator works without Google Maps, as soon as you activate it. There is no Google Cloud project to create, no billing account to add and no API key to restrict. Address searches are geocoded on your server and cached, and the map, markers, Marker Studio, category filters, map shapes and location pages all work on OpenStreetMap.
+
+Need Google Maps, Mapbox or Stadia Maps later? Switch with one setting. Your locations do not need to be re-entered or re-geocoded.
+
+= Why WP Store Locator =
+
+* **Works without Google Maps.** Run the entire store locator on OpenStreetMap with no API key, no Google account and no credit card. Prefer Google Maps, Mapbox or Stadia Maps? Pick it from a dropdown. Your locations, settings and add-ons work with every provider.
+* **No code needed for custom data.** The Fields Manager adds your own fields to the store editor and the Section Editor places them in the results, the info window or anywhere else on the front end.
+* **Design your own markers.** The Marker Studio lets you create marker icons that match your brand instead of picking from a fixed set.
+* **Draw on the map.** Polygons, circles, rectangles and lines for service areas, delivery zones or sales territories.
+* **A modern theme and an appearance editor.** A new vertical layout, plus colours, call-to-action buttons and map styles you can change without touching CSS.
+* **Privacy built in.** Hold the map back until the visitor consents, with your own text, or hand the decision to Borlabs Cookie or Complianz.
+* **Faster.** Location data is loaded in a single batch and settings in a single query, so a locator with hundreds of locations stays quick.
+
+= 🗺️ Pick your map service =
+
+WP Store Locator is the only store locator you need, whichever map provider you choose:
+
+* **OpenStreetMap (Leaflet)**: Free. No API key. Optional free vector styles from OpenFreeMap, and inline routes with a free Openrouteservice key.
+* **Stadia Maps**: Ten polished map styles, its own geocoder and routing, and an **EU endpoints** switch that keeps all requests inside the European Union.
+* **Mapbox**: Design a map in Mapbox Studio, paste the style URL and the locator uses it. Ten styles ship out of the box, including satellite and navigation.
+* **Google Maps**: Full support, now on the current Geocoding and Routes APIs, with Advanced Markers, cluster styling and the new Autocomplete Data API.
+
+Switching provider is a single setting. Nothing needs to be re-entered or re-geocoded.
+
+= 🔍 Search that finds the right store =
+
+* Search by address, postcode, city, state or country, or by store name.
+* Autocomplete as the visitor types, on Google Maps, Mapbox and Stadia Maps.
+* Detect the visitor's location automatically, on page load or after they click the locate button.
+* Radius, max results and category filters, as dropdowns or checkboxes.
+* Combine categories with AND or OR logic, or pre-select a default category.
+* Hide the address search and show only the category filter to turn the locator into a browsable directory.
+* Sort by distance, name, address, city, postcode, state, country or ID, ascending or descending.
+* Search for a whole country or state and get every location in it.
+* No results in range? Show the nearest location anyway, however far.
+* Keep results inside the searched country, so a border town does not return stores across the border.
+* Show the number of results returned.
+* Bias or restrict results to up to 15 countries.
+
+= 📍 Unlimited locations with rich details =
+
+* **A landing page for every location, with one switch.** No pages to create, shortcodes to place or code to write: every location gets its own page with a clean URL, so search engines and customers can link straight to a store.
+* Address, phone, fax, email, URL, description, featured image and categories for every location.
+* Structured opening hours with a live **Open now / Closed** badge, expandable to the full week.
+* Custom hours text and a "special hours" field for holidays.
+* Mark a store permanently or temporarily closed, with an automatic reopen date.
+* Your own fields of any type: text, textarea, email, phone, URL, checkbox or dropdown, grouped the way you want them in the editor.
+* Drag the marker to the exact spot, or type coordinates in by hand.
+* Admin search by name, postcode, city, state or country, and sortable custom columns.
+
+= 🎨 Make it look like your site =
+
+* Vertical or horizontal layout, with results beside or below the map.
+* Appearance editor for colours, dimensions, call-to-action buttons and active map styles.
+* Marker Studio for custom markers, plus per-category markers and a distinct active marker.
+* Numbered or lettered markers that match the results list.
+* Category colors, shown as a dot in the category filter and as colored labels in the search results.
+* Marker clusters on every provider, with styled and colour-interpolated clusters on Google Maps.
+* Section Editor to change the markup of the results list, info window, result count and online stores sections.
+* Open the info window on hover or by clicking the address in the results.
+* Every label and placeholder is editable, and any label can be hidden without losing the field.
+* Improved accessibility, keyboard navigation and RTL support.
+
+= 🔒 Privacy and GDPR =
+
+* Built-in consent placeholder with your own description text. No extra plugin required.
+* Integrations with **Borlabs Cookie** and **Complianz**.
+* Server-side geocoding on OpenStreetMap.
+* EU-only endpoints on Stadia Maps.
+
+= 🧩 Blocks and shortcodes =
+
+* **Store Locator** and **Map** blocks for the block editor.
+* `[wpsl]` for the full locator, with attributes for categories, filters, map style, markers, shapes, region and distance unit.
+* `[wpsl_map]` for a map with one or more locations.
+* `[wpsl_address]` and `[wpsl_hours]` to show the address, contact details or opening hours of a single location anywhere.
+
+= ⚙️ Built for site owners and developers =
+
+* Onboarding wizard for new installs, and automatic migration of 2.x settings.
+* Home screen with a setup checklist and alerts for compatibility problems, missing keys or API errors.
+* API key validation with the raw response shown, so key restrictions and billing problems are diagnosed in seconds.
+* Import and export settings, reset data, clear caches and inspect geocode responses from the Tools section.
+* Custom post types and taxonomies, more than 50 filters, template overrides and a helper to build your own custom-field filters.
+* Compatible with WPML and Polylang.
+
+= 🏬 Made for every business with locations =
+
+Retail chains, dealer networks, franchises, bank branches, clinics and pharmacies, restaurants, gyms, real estate offices, schools, service centres, stockists and where-to-buy pages. If people need to find you, WP Store Locator gets them there.
+
+= 🚀 How it works =
+
+1. Install and activate the plugin.
+2. Follow the onboarding wizard. Pick **OpenStreetMap** to skip API keys entirely, or connect Google Maps, Mapbox or Stadia Maps. Then set a start location.
+3. Add your locations under **Store Locator > Add Store**, or import them with the [CSV Manager](https://wpstorelocator.co/add-ons/csv-manager/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator) from the Add-on Bundle.
+4. Add the **Store Locator** block or the `[wpsl]` shortcode to a page.
+
+= 🎁 Add-on Bundle: pay once, own forever =
+
+Get every premium add-on in one [Add-on Bundle](https://wpstorelocator.co/bundles/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator). You pay once with no yearly subscription, and you get lifetime updates.
+
+* **[CSV Manager](https://wpstorelocator.co/add-ons/csv-manager/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)**: Bulk import, export and update locations from a CSV file.
+* **[Search Widget](https://wpstorelocator.co/add-ons/search-widget/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)**: Let visitors search for the nearest store from any widget area and land on the results page.
+* **[Statistics](https://wpstorelocator.co/add-ons/statistics/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)**: See what people search for and where there is demand for a new location.
+
+Every bundle includes:
+
+* Lifetime updates
+* 12 months of technical support
+* A free upgrade to WP Store Locator Pro when it launches
+* A 30-day money-back guarantee
+
+Bundles are available for 1, 5 or 20 sites. [Compare the bundles](https://wpstorelocator.co/bundles/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator).
+
+3.0 requires version 2.0 or later of each add-on.
+
+= 📚 Documentation and support =
+
+> Please take a look at the [documentation](https://wpstorelocator.co/documentation/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator) before making a support request.
+
+* [Getting Started](https://wpstorelocator.co/documentation/getting-started/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+* [Configure WP Store Locator](https://wpstorelocator.co/document/configure-wp-store-locator/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+* [Shortcodes](https://wpstorelocator.co/document/shortcodes/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+* [Troubleshooting](https://wpstorelocator.co/documentation/troubleshooting/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+* [Customisations](https://wpstorelocator.co/documentation/customisations/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+* [Filters](https://wpstorelocator.co/documentation/filters/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator)
+
+== Installation ==
+
+1. Upload the `wp-store-locator` folder to the `/wp-content/plugins/` directory, or install it from the Plugins screen.
+1. Activate the plugin through the 'Plugins' menu in WordPress.
+1. Run through the onboarding wizard. Choose a map service under **Store Locator > Settings > API**. OpenStreetMap needs no key. For [Google Maps](https://wpstorelocator.co/document/create-google-api-keys/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator), [Mapbox](https://wpstorelocator.co/document/create-mapbox-api-key/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator) or [Stadia Maps](https://wpstorelocator.co/document/create-stadia-maps-api-key/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator), enter the key and click **Validate API key**.
+1. Set the start location under **Store Locator > Settings > Map**.
+1. Add your stores under **Store Locator > Add Store**.
+1. Add the **Store Locator** block or the `[wpsl]` shortcode to a page.
+
+== Frequently Asked Questions ==
+
+= Do I need a Google Maps API key? =
+
+No. Choose **OpenStreetMap (Leaflet)** as the map service and the store locator runs without any API key. A key is only needed for Google Maps, Mapbox and Stadia Maps, or if you want routes drawn on the map with OpenStreetMap (free Openrouteservice key).
+
+= Is WP Store Locator free? =
+
+Yes. The plugin is free, with unlimited locations, and it runs on free OpenStreetMap maps without an API key. The CSV Manager, Search Widget and Statistics add-ons are optional paid extras.
+
+= What is the difference between OpenStreetMap and Google Maps? =
+
+Both show your locations, markers, categories, map shapes and location pages. The differences:
+
+* Address suggestions while the visitor types (autocomplete) are available on Google Maps, Mapbox and Stadia Maps, not on OpenStreetMap.
+* On OpenStreetMap the Directions link opens the route on openstreetmap.org. Add a free Openrouteservice key to draw the route on your own map instead.
+* Google Maps needs an API key from a Google Cloud project with billing enabled. OpenStreetMap needs no key or account.
+
+= Can I switch map providers later? =
+
+Yes. The map service is a single setting under **Store Locator > Settings > API**. Your locations, coordinates, categories, custom fields, markers and settings stay the same.
+
+= How do I add the store locator to a page? =
+
+Add the **Store Locator** block, or the [shortcode](https://wpstorelocator.co/document/shortcodes/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator) `[wpsl]`, to the page where you want to display the store locator.
+
+= Can I add my own fields to the locations? =
+
+Yes. Go to **Store Locator > Settings > Fields Manager**, create a group and add your fields. Then use the [Section Editor](https://wpstorelocator.co/document/add-custom-fields-to-store-locations/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator#generate-template-code) to place them in the results list or info window. It can generate the template code for you, so no coding is required.
+
+= Can I use different markers for categories or individual locations? =
+
+Yes. Design markers in the **Marker Studio**, then assign them to categories or to single locations. You can also set a separate marker for the active location.
+
+= I upgraded from 2.x. Where did my settings go? =
+
+They were migrated automatically. Some sections moved: Google Maps API is now **API**, Permalink is now **Local Pages**, and sizing, templates and map styling moved to the **Appearance** page. If the migration did not complete, use **Retry migration** under **Store Locator > Settings > Tools**.
+
+= My add-ons were disabled after updating to 3.0 =
+
+3.0 requires version 2.0 or later of the CSV Manager, Statistics and Search Widget add-ons. Older versions are disabled automatically until you update them.
+
+= Oops! Something went wrong =
+
+This is a Google Maps error. Set a valid [browser key](https://wpstorelocator.co/document/create-google-api-keys/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator) under **Store Locator > Settings > API** and click **Validate API key** to see the exact reason Google returns.
+
+= There are weird characters in the search results, how do I remove them? =
+
+This is most likely caused by a caching plugin that minifies the HTML output on the store locator page. Exclude the store locator page from minification in the settings of your caching plugin.
+
+= The map doesn't display properly. It's either broken in half or doesn't load at all. =
+
+Make sure you have defined a start location under **Store Locator > Settings > Map**. If the locator looks broken after upgrading to 3.0, try **Disable v3 theme rules** under **Settings > Tools**.
+
+= The map doesn't work anymore after installing the latest update =
+
+If you use a caching plugin, or a service like Cloudflare, then make sure to flush the cache.
+
+= Directions stopped working after updating to 3.0 =
+
+Version 3.0 requests Google Maps directions through the [Routes API](https://console.cloud.google.com/apis/library/routes.googleapis.com) instead of the legacy [Directions API](https://developers.google.com/maps/documentation/directions) that version 2 used. It is a separate product in your Google Cloud project, so open the Routes API page, select the project that holds your API keys and click **Enable**. If the browser key has API restrictions, also add the Routes API to the allowed APIs under [Credentials](https://console.cloud.google.com/apis/credentials). Until then the map keeps working, but clicking **Directions** shows a notice instead of the route.
+
+= Why does it show the location I searched for in the wrong country? =
+
+Some location names exist in more than one country. Set the correct **Bias country** under **Store Locator > Settings > API**, or restrict results to specific countries.
+
+= The store locator doesn't load, it only shows the number 1? =
+
+This is most likely caused by your theme using ajax navigation ( the loading of content without reloading the page ), or a conflict with another plugin. Try to disable the ajax navigation in the theme settings, or deactivate plugins one by one to find the conflict.
+
+If you find a plugin or theme that causes a conflict, please report it on the [support page](http://wordpress.org/support/plugin/wp-store-locator).
+
+= Where do I report security bugs found in this plugin? =
+
+Please report security bugs found in the source code of the WP Store Locator plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/dd3fdc38-66c5-4e80-ae86-96da0e63f2ba). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
+> You can find the full documentation [here](https://wpstorelocator.co/documentation/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator).
+
+== Screenshots ==
+
+1. Pick the default, horizontal or vertical layout
+2. Pick a map service: OpenStreetMap with no API key, or Mapbox, Stadia Maps and Google Maps
+3. The Fields Manager, add your own fields to the stores
+4. The Local Pages settings for the store landing pages and their permalinks
+5. The GDPR settings, ask visitors for consent before the map loads
+6. The Section Editor, change the template that renders the store listings
+7. The customizer, with a live preview of the store locator
+8. The map style settings, with a dark Mapbox style applied
+9. Restyle the search form
+10. Restyle the buttons
+11. Restyle the search results
+12. The Marker Studio, design your own markers from 586 icons
+13. Map Shapes, draw circles, rectangles and polygons on the map
+
+== Upgrade Notice ==
+
+= 3.0 =
+Major rewrite. Update the CSV Manager, Statistics, and Search Widget add-ons to version 2.0 or later. Older add-ons are automatically disabled on 3.0 until you update them. Google Maps directions now use the Routes API, which has to be enabled in your Google Cloud project: https://console.cloud.google.com/apis/library/routes.googleapis.com. Coming from a 3.0 beta? Purge every server, plugin and CDN cache after updating, or the browser keeps loading the old scripts and styles.
+
+== Changelog ==
+
+= 3.1.1 2026-10-26 =
+New
+* "Draw the search radius circle?" option ( Map settings ), with a color setting and the 'wpslRadiusCircleStyle' JS filter.
+* "Show locations at the same address as one marker?" option ( Markers settings ). Two or more locations at the same address share one marker. Its info window shows them one at a time, or as a list when there are more than five.
+* Detects outdated cached scripts after an update, with an admin notice, a check on the Home page and an "Outdated cached files" tool. See [how to clear the cache](https://wpstorelocator.co/document/clear-cdn-cache-after-update/?utm_source=wordpress.org&utm_medium=plugin_directory&utm_campaign=wp-store-locator).
+* "Enable the social media group?" option ( Editor settings ). Social media links per location ( X, YouTube, Instagram, Facebook, LinkedIn, TikTok, Pinterest, WhatsApp, Yelp, Tripadvisor or any other link ), shown as brand icons in the search results, the info windows and on the location pages. Developers: the {{wpsl_social_links}} template tag and a social attribute on [wpsl_address]. If the icons don't show up after turning it on, clear your page or server cache.
+* Quick setup on the Home page: the six main choices ( search method, countries, auto-locate, location pages, layout and search filters ), each saved as soon as it's picked. It's also the last step of the setup wizard. On updated sites it starts hidden.
+* Developers: the 'wpsl_full_search_region_meta_keys' and 'wpsl_status_report_server_details' filters.
+
+Changed
+* Featured locations sort first.
+* Distances under 1 km / 0.1 mi show in meters / feet, via a new 'distance_short' value.
+* Fills in missing country codes without geocoding.
+* The deactivation survey accepts an email address and longer error messages. Its technical details no longer check the Google API key live.
+* A redesigned setup wizard, with a fourth "Your Locator" step for the Quick setup choices.
+* Store categories are managed by users who can edit all locations ( administrators and the Store Locator Manager role ), instead of everyone with the manage_categories capability.
+* Password-protected locations are left out of the search results, as they already were from [wpsl_map], [wpsl_address] and [wpsl_hours].
+* On multisite, the server details in the status report are only shown to network administrators.
+
+Fixed
+* Country-restricted searches now include locations without a country code.
+* Whole-country or -state searches now return all locations, not just the max.
+* Google Maps: fixed a blank map behind consent tools, country lists in the 'wpsl_geocode_components' filter, and markers hiding behind others at the same address.
+* Featured locations are no longer dropped when more results match than the max.
+* Long category names wrap in the dropdown and search results.
+* Fixed setting combinations: name search with "Load locations on page load", auto-locate with "Load locations on page load", and "Ignore the default start location" with "Use my current location".
+* A single name-search result now zooms in.
+* [wpsl_map] without locations loads at its configured center ( OpenStreetMap, Stadia ).
+* Locator styles print with the shortcode, so cache and optimization plugins ( LiteSpeed, Cloudflare Rocket Loader ) no longer break them.
+* "Only show the category filter?" correctly hides the search field and lists a picked category's locations.
+* Picking a country or state from the address suggestions lists all its locations ( Google Maps, Mapbox, Stadia ).
+* Mapbox: whole-country or -state searches work with the Geocoding v6 response.
+* Stadia Maps: address suggestions include countries and regions.
+* Mapbox: the active marker shows on top, and clustered markers no longer bounce on hover.
+* Changing the restricted countries now clears the cached page load results, which kept showing the old locations for up to a day.
+* The bulk geocode tool only returns the names of locations the user can edit.
+* Google Maps: the start marker's info window and the shared-marker list escape names and addresses.
+
+= 3.1.0 2026-10-07 =
+New
+* A "Please adjust your search" field on the Labels settings.
+* Featured stores: enable "Show first in results?" in the store editor to show a store above the other results. Set their colors on the Appearance page.
+* Category colors, shown as a dot in the category filter and in a new "Color" column on the Categories page.
+* An alert on the Home page when a Permissions-Policy header on the site blocks geolocation, which breaks auto-locate and the "Use my current location" button.
+* A "Show categories?" option on the Appearance page to list the categories of a store below its address in the search results.
+* A "Hide the search results list?" option, or results_list="false" for [wpsl], to only show the search bar and the map.
+* A "Hide the start marker?" option on the Markers settings.
+* A "Show the store thumbnail in the info window?" option on the User Experience settings.
+* A 'directions' attribute for [wpsl] to hide the "Directions" link: [wpsl directions="false"].
+* An option under Tools to hide the WPSL admin bar menu, or to only show it when there is an alert.
+* Link to a search with ?wpsl_address=Amsterdam, or ?wpsl_name= for the name search. Both are read in the browser, so they also work with page caching. 'wpsl_category' works as an alias of 'wpsl_cat'.
+* wpsl_create_meta_filter() dropdowns show the option labels of the Fields Manager, and start with an "Any" option. New 'labels' and 'empty_label' arguments.
+
+Changed
+* The system status report shows the search method, whether the API keys are saved and valid, and the active alerts.
+* The deactivation survey asks what went wrong, with an optional checkbox to include the system status report.
+* A [wpsl] shortcode with a 'city', 'state' or 'country' restriction no longer auto-locates the visitor. A 'start_location' in the shortcode now also wins over the auto-locate setting, unless auto_locate="true" is in the same shortcode.
+* The Appearance preview shows example categories instead of the categories of the site.
+* The draft and pending counts on the Locations tile of the Home page are stacked instead of side by side.
+* The markup of wpsl_create_meta_filter() changed, and its value is sent as restrictions[{field}]. Register the field with the 'wpsl_restriction_meta_fields' filter, or set the new 'name' argument.
+* On Google Maps, a store page or [wpsl_map] with a single store now zooms in on that store, up to the "max auto zoom level", the same as on the other map services. It used to open at the start zoom level. A 'zoom' attribute still sets the zoom level.
+
+Fixed
+* A stray number below a store when "Hide the opening hours" was enabled and another script defined a global `hours` variable.
+* The destination marker of a route didn't switch to the active marker when clicked.
+* A 'gmp-click' console warning in the Appearance preview with Google Maps Advanced Markers.
+* An empty Google map when a theme or plugin loaded an older jQuery version, such as 1.11.
+* A JavaScript error on an empty ( null ) geocoding or AJAX response.
+* The underline of the expandable opening hours status ran past the arrow in some themes.
+* A cache-poisoning issue in the start location of [wpsl]: "London, Ontario" in one shortcode changed the start location of every shortcode set to "London".
+* Fixed an authenticated stored XSS in the template attribute of [wpsl], and in the marker hover effect on OpenStreetMap through the store marker fields. Found by Intrudify.
+* The marker popup showed the country, and passed 'listing' instead of 'info_window' to the 'wpsl_store_header_template' filter.
+* A PHP 8 fatal error when saving a store, if Google returned an address component without a 'types' field. Stores were also wrongly rejected by "restrict country" when Google left out the short country code.
+* In the classic editor, saving a store never showed the geocoding warning or error, such as an imprecise address or a store set to pending because its address could not be found.
+* [wpsl_hours] showed the opening hours of unpublished stores.
+* [wpsl_map], [wpsl_address] and [wpsl_hours] showed the details of password-protected stores.
+* Empty parts such as ", ," in the Google directions link. [wpsl_address] now includes the zip code and follows the 'wpsl_force_direction_coordinates' filter.
+* The fax number was a clickable tel: link.
+* HTML tables in a store description, custom field or custom template were hidden.
+* A PHP warning for an unknown category in the 'wpsl_cat' URL parameter.
+* Quick Edit on a category removed its markers.
+* "Location(s) of contact details" and "Location(s) of opening hours" couldn't be emptied. With nothing selected, they went back to the search results after saving. The upgrade from 2.x also turned them on in the search results when they were off in 2.x.
+* With icons enabled, the "More details" and "Directions" links didn't line up with the address text.
+* An empty "More details" label pushed the "Directions" link out of line with the address text.
+* Custom markers looked too small in the marker dropdown of the store editor and the shortcode generator.
+* The shortcode generator always added auto_locate="false", and its dialog could open out of view.
+* The offer to ignore the search radius showed for country, state and filter-only searches, which don't use a radius.
+* The "Geocode API Response" and "Convert 1.x opening hours" dialogs could open out of view.
+* With OpenStreetMap, a search for a whole country or state only returned the locations within the search radius.
+* Declining the location prompt after clicking "Use my current location" showed no message when the auto-locate attempt on page load had already timed out. The button then kept flashing and the Search button stayed disabled.
+* The Apply button in the filter panel ran into the scrollbar when the list of filters scrolled.
+* The marker popup on the store pages and of [wpsl_map] had different spacing per map service: no space between the address and the contact details on Google Maps and Mapbox, and extra space on OpenStreetMap and Stadia.
+* With the styled buttons enabled, the marker popup still showed its "Directions" and "More details" links while the route was already showing.
+* The label of a wpsl_create_meta_filter() dropdown was aligned to the top of the dropdown instead of its middle. On smaller screens the dropdown also sat higher than the category dropdown next to it, and on phones it wasn't full width.
+
+= 3.0.3 2026-09-25 =
+Changed
+* Added a content hash to lazy-loaded JS modules to prevent browsers, hosts or CDNs from serving an older copy and breaking the map or settings page.
+
+= 3.0.2 2026-09-24 =
+Fixed
+* Fatal error "Service not found: plugin_alerts" on admin and AJAX requests when another plugin, such as MainWP Child, logs the user in during `init`.
+
+= 3.0.1 2026-09-24 =
+Fixed
+* Prevent a fatal error by checking that `is_plugin_active` is available before calling it.
+* `wpsl_create_meta_filter()` now calls the correct service.
+* The Dimensions tab now shows the height fields of the active template.
+* Results list no longer overflows its container with a custom height, plus other styling fixes.
+* Custom CSS for the v2 dropdowns and search button overrides the v3 styles again.
+* The radius and results dropdowns no longer disappear when "Only show the category filter?" was saved after the category filter was disabled.
+* Custom v2 code reading the height from `$wpsl_settings` now gets the active template's height, instead of always 450.
+* After upgrading from v2, an alert explains why the Google Maps server key check failed, and the Home step reads "Fix your Google Maps API key".
+* Clearer instructions when Google blocks the server key due to IP/API restrictions or a disabled Geocoding API.
+* The v2 "Hide the scrollbar?" option is back as "Show all results" in the horizontal template's Results height setting (Appearance → Dimensions).
+* Theme CSS for multi-column search results works again; a single column renders as a normal list, as in v2.
+* The Appearance preview now resizes the category dropdown to match search field width changes.
+
+Changed
+* Optimized the responsive CSS.
+* The vertical template's search field and filters use the search results' font size instead of the theme's body size (theme CSS can still override it).
+* With "Overwrite theme styles" off, theme colors take priority over plugin defaults again, as in 2.x.
+* With 2-3 result columns, the column count now follows the results list width, staying at least 260px wide per column.
+
+= 3.0 2026-09-21 =
+New
+* Added support for Mapbox, Stadia and OpenStreetMap (Leaflet)
+* A new modern theme
+* Support for name searches
+* Create your own markers in the Marker Studio
+* Draw polygons, circles, rectangles and lines on the map
+* Fields manager that allows you to manage custom data fields
+* Appearance editor that allows you to customize the theme / CTA buttons / active map styles (custom colors, icons, etc.)
+* Template section editor that allows you to customize the code of different template sections
+* Show the current open / closed status
+* Make the current opening status expandable
+* Select different template locations where the contact details, opening hours and post content are displayed
+* Option to select an active store marker
+* Option to set a category marker
+* New cluster marker styles for Google Maps
+* Added the option to show the number of returned results
+* Option to define the search results order (ascending / descending) and sort by (address / id / distance / city / state / country)
+* Optionally only show the category filter
+* Default category filter selection
+* If the search input is a country or state, then return all results
+* If no results are found, then show the nearest location ignoring the used search radius
+* Option to exclude locations from nearby countries in the search results (a search for a border town no longer shows locations across the border, even if they fall inside the search radius)
+* Select the returned geolocation address format (zip, city/town, full address)
+* Choose to run the geolocation attempt on page load or when the user clicks the auto-locate button
+* Set the placeholder for the search field
+* Option to open the info window by hovering over the corresponding marker
+* Clicking on the address details in the search results opens the info window on the map
+* Option to set a store permanently or temporarily closed (optionally automatically reopen)
+* Option to set the opening hours to a custom text, and a "special hours" input field
+* Built-in GDPR support
+* An Alerts section on the settings page that shows compatibility warnings and other relevant messages
+* Data management tool that allows you to delete all locations / categories and reset the plugin to default settings
+* Import / export settings tool
+* When "Add New Store" is clicked and no valid API key exists for Google Maps or Mapbox, a warning is shown that an API key is required, unless the coordinates are entered manually
+* New shortcode options for [wpsl]: 'exclude_category', 'category_parent_id', 'category_filter', 'radius_filter', 'results_filter', 'map_style', 'map_id', 'active_marker', 'marker_clusters', 'shapes', 'city', 'state', 'country' and 'distance_unit'
+* New shortcode options for [wpsl_map]: 'map_id', 'store_marker', 'active_marker', 'marker_clusters', 'shapes', 'city', 'state' and 'country'
+* New 'current_status' and 'expand_status' attributes for the [wpsl_hours] shortcode, so the open / closed status and its expandable week can be set per shortcode instead of only globally
+* New 'contact_details' attribute for the [wpsl_address] shortcode. Shows or hides the Phone/Fax/Email/Url block in one go, so a single shortcode can disagree with the contact details location setting without needing four attributes. The individual 'phone', 'fax', 'email' and 'url' attributes still win where they are named.
+* New 'bold_contact_details' attribute for the [wpsl_address] shortcode. Wraps the Phone/Fax/Email/Url labels in `<strong>` (default true) so single store pages match the search results list. Set to false to restore the v2 unbolded output, or override via the 'wpsl_address_shortcode_defaults' filter.
+* Added per-label show/hide toggles for the search-bar labels, so you can hide a label on the front-end without losing its text or the field itself.
+* A wpsl_create_meta_filter() function allowing developers to create custom dropdowns / checkbox lists based on the passed custom meta key.
+* A 'wpsl_sortable_columns' filter to make custom columns sortable in the admin area
+* A 'wpsl_skip_required_check' filter to disable all required checks
+* A 'wpsl_force_direction_coordinates' filter to use the coordinates instead of the address details as the destination in the Google Maps direction links
+
+Changed
+* Modernized the decade-old codebase
+* Migrated to v4 of the Google Geocoding API
+* Migrated from the DirectionsService to the new Google [Routes API](https://console.cloud.google.com/apis/library/routes.googleapis.com), which has to be enabled in your Google Cloud project
+* New users now go through an onboarding process
+* Overall improved accessibility / keyboard navigation
+* Improved support for RTL languages
+* The data for the returned locations is now loaded in a single batch instead of one location at a time. The post data, custom fields, categories and featured images are all primed up front, which keeps the number of database queries flat when the search results or a [wpsl_map] contain many locations.
+* The settings are read in one query per request instead of one per option group, and only the two groups needed on every page load are autoloaded.
+* The CSV Manager, Statistics and Search Widget add-ons require version 2.0 or later. Older versions are automatically disabled until you update them.
+* The new vertical theme's store locator container defaults to 450px high
+* The default markers are now SVG files instead of PNG. PNG is still supported.
+* Extended the admin search with support for zip, city, state and country searches
+* Google Maps API key related errors are captured and shown to the user, explaining how to fix them
+* Check for the partial match param in the Geocode API response for Google Maps, and warn the user if this happens
+* Renamed the "below_map" (Show the store list below the map) template to "horizontal"
+* The 'more info' section now always shows when it's enabled, so it's no longer required to have contact details filled out
+* The start day of the week for the hours respects the WordPress settings
+* If the label tag is left empty on the settings page, then don't render the label tag in the search bar
+* Set the correct alt text on the preload image
+* The tabs in the admin area fail gracefully, so they remain accessible if a JS error occurs
+* The shortcode warning that shows up when it's used outside of a store page is now only shown to logged-in users
+* Make the directions use the start / location markers instead of the default ones
+* If the auto location option is enabled but no SSL is available, the exclamation mark next to it appears red, with popup text explaining the issue
+* The 'zoom_controls' attribute was removed from the [wpsl_map] shortcode. Zoom controls now follow the map provider's default behaviour.
+* The 'phone', 'fax', 'email' and 'url' attributes of the [wpsl_address] shortcode now follow the contact details location setting, instead of always being enabled.
+* Removed support for the InfoBox library to style the pop-ups (no updates for many years). Popups are now styled according to the map provider's default styles.

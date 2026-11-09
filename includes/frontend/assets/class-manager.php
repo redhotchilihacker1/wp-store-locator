@@ -1,0 +1,1109 @@
+<?php
+/**
+ * Handle the script / style assets for the frontend.
+ *
+ * @author Tijmen Smit
+ * @since  3.0.0
+ */
+
+namespace WPSL\Frontend\Assets;
+
+defined( 'ABSPATH' ) || exit;
+
+use WPSL\Frontend\Assets\Resources;
+use WPSL\Frontend\Templates\Manager as TemplatesManager;
+use WPSL\Frontend\Store\Data as StoreData;
+use WPSL\Frontend\State\Manager as StateManager;
+
+use WPSL\Core\Container;
+use WPSL\Core\UI\Theme_Styles;
+use WPSL\Core\Settings\Manager as WpslSettings;
+
+class Manager {
+
+    /**
+     * Resources object.
+     *
+     * @since 3.0.0
+     * @var \WPSL\Frontend\Assets\Resources
+     */
+    private $resources;
+
+    /**
+     * Settings manager instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Core\Settings\Manager
+     */
+    private $settings;
+
+    /**
+     * Theme styles instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Core\UI\Theme_Styles
+     */
+    private $theme_styles;
+
+    /**
+     * Templates manager instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Frontend\Templates\Manager
+     */
+    private $templates_manager;
+
+    /**
+     * Store data instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Frontend\Store\Data
+     */
+    private $store_data;
+
+    /**
+     * Container instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Core\Container
+     */
+    private $container;
+
+    /**
+     * Frontend state manager instance
+     *
+     * @since 3.0.0
+     * @var \WPSL\Frontend\State\Manager
+     */
+    private $state;
+
+    /**
+     * Whether the front-end stylesheets were already enqueued this request.
+     *
+     * @since 3.0.0
+     * @var   bool
+     */
+    private $styles_enqueued = false;
+
+    /**
+     * The style handles ensure_styles() added to the queue.
+     *
+     * @since 3.1.1
+     * @var   array
+     */
+    private $style_handles = [];
+
+    /**
+     * Whether the body classes reached the page, through the body_class
+     * filter or the inline script that late_assets() prints.
+     *
+     * @since 3.1.1
+     * @var   bool
+     */
+    private $body_classes_added = false;
+
+    /**
+     * The style tags late_assets() printed with a shortcode, for the
+     * fallback script of the shortcodes rendered after it.
+     *
+     * @since 3.1.1
+     * @var   string
+     */
+    private $late_styles = '';
+
+    /**
+     * Class constructor
+     *
+     * @since 3.0.0
+     * @param \WPSL\Core\Container             $container         Container instance
+     * @param \WPSL\Core\Settings\Manager      $settings          Settings manager instance
+     * @param \WPSL\Frontend\Assets\Resources  $resources         Resources instance
+     * @param \WPSL\Core\UI\Theme_Styles       $theme_styles      Theme styles instance
+     * @param \WPSL\Frontend\Templates\Manager $templates_manager Templates manager instance
+     * @param \WPSL\Frontend\Store\Data        $store_data        Store data instance
+     * @param \WPSL\Frontend\State\Manager     $state             Frontend state manager instance
+     */
+    public function __construct( Container $container, WpslSettings $settings, Resources $resources, Theme_Styles $theme_styles, TemplatesManager $templates_manager, StoreData $store_data, StateManager $state ) {
+        $this->container = $container;
+        $this->settings = $settings;
+        $this->resources = $resources;
+        $this->theme_styles = $theme_styles;
+        $this->templates_manager = $templates_manager;
+        $this->store_data = $store_data;
+        $this->state = $state;
+        
+        add_filter( 'body_class', [ $this, 'add_frontend_body_class' ] );
+        add_filter( 'do_shortcode_tag', [ $this, 'prepend_late_assets' ], 10, 2 );
+    }
+
+    /**
+     * Add wpsl-v3 class to body on frontend pages.
+     *
+     * @since  3.0.0
+     * @param  array $classes Current body classes
+     * @return array Modified body classes
+     */
+    public function add_frontend_body_class( $classes ) {
+        $this->body_classes_added = true;
+
+        return array_merge( $classes, $this->get_body_classes() );
+    }
+
+    /**
+     * The classes the front-end adds to the body.
+     *
+     * @since  3.1.1
+     * @return array The class names
+     */
+    private function get_body_classes() {
+        $classes = [ 'wpsl-v3' ];
+
+        // Conditionally add wpsl-v3-css class - only if NOT disabled
+        if ( ! $this->settings->get( 'tools', 'disable_v3_css' ) ) {
+            $classes[] = 'wpsl-v3-css';
+        }
+
+        return $classes;
+    }
+
+    /**
+     * Put the late assets in front of the locator shortcode output.
+     *
+     * The blocks render through do_shortcode() as well, so this covers them.
+     *
+     * @since  3.1.1
+     * @param  string|false $output The shortcode output
+     * @param  string       $tag    The shortcode name
+     * @return string|false The shortcode output
+     */
+    public function prepend_late_assets( $output, $tag ) {
+        if ( ! in_array( $tag, [ 'wpsl', 'wpsl_map', 'wpsl_address', 'wpsl_hours' ], true ) || ! is_string( $output ) || '' === trim( $output ) ) {
+            return $output;
+        }
+
+        return $this->late_assets() . $output;
+    }
+
+    /**
+     * The stylesheets and body classes a shortcode added after the head.
+     *
+     * When the asset detector misses a locator ( a theme template, page builder
+     * or widget renders it ), the shortcode enqueues the styles after the head
+     * printed. WordPress then prints them in the footer, or since 6.9 moves them
+     * to the head through an output buffer, and a cache or optimization plugin
+     * that ends that buffer drops them. Printed here with the markup instead,
+     * they don't depend on either. The body_class filter also ran before the
+     * shortcode registered it, so the body classes are added with a script.
+     *
+     * @since  3.1.1
+     * @return string The style tags and script, or an empty string
+     */
+    public function late_assets() {
+        if ( ! did_action( 'wp_print_styles' ) ) {
+            return '';
+        }
+
+        $markup  = '';
+        $handles = array_diff( $this->style_handles, wp_styles()->done );
+
+        if ( $handles ) {
+            ob_start();
+            wp_styles()->do_items( array_values( $handles ) );
+            $styles = ob_get_clean();
+
+            $markup            .= $styles;
+            $this->late_styles .= $styles;
+        } elseif ( '' !== $this->late_styles ) {
+
+            /*
+             * The styles went out with an earlier shortcode in this request. When
+             * that output was thrown away ( a plugin that renders the content
+             * into a buffer to read it ), they never reached the page and are
+             * marked as printed, so add the ones that are missing. On a page
+             * that has them, this changes nothing.
+             */
+            return wp_get_inline_script_tag(
+                '(function(){var t=document.createElement("template");t.innerHTML=' . wp_json_encode( $this->late_styles, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';Array.prototype.slice.call(t.content.children).forEach(function(n){if(n.id&&!document.getElementById(n.id)){document.head.appendChild(n);}});document.body.classList.add(' . implode( ',', array_map( 'wp_json_encode', $this->get_body_classes() ) ) . ');})();',
+                [
+                    'data-no-optimize' => '1',
+                    'data-cfasync'     => 'false',
+                ]
+            );
+        }
+
+        if ( ! $this->body_classes_added ) {
+            $this->body_classes_added = true;
+
+            // Kept out of LiteSpeed's and Cloudflare's script deferring, which would hold it until the visitor interacts.
+            $markup .= wp_get_inline_script_tag(
+                'document.body.classList.add(' . implode( ',', array_map( 'wp_json_encode', $this->get_body_classes() ) ) . ');',
+                [
+                    'data-no-optimize' => '1',
+                    'data-cfasync'     => 'false',
+                ]
+            );
+        }
+
+        return $markup;
+    }
+
+    /**
+     * Enqueue the Leaflet marker cluster styles for the osm / stadia services.
+     *
+     * @since  3.0.0
+     * @return void
+     */
+    public function enqueue_cluster_styles() {
+        if ( ! in_array( $this->settings->get( 'api', 'active_map_service' ), [ 'osm', 'stadia' ], true ) ) {
+            return;
+        }
+
+        if ( wp_style_is( 'wpsl-leaflet-markercluster', 'enqueued' ) ) {
+            return;
+        }
+
+        wp_enqueue_style( 'wpsl-leaflet-markercluster', WPSL_URL . 'assets/vendor/leaflet/leaflet-markercluster.min.css', '', WPSL_VERSION_NUM );
+
+        do_action( 'wpsl_inline_cluster_styles' );
+    }
+
+    /**
+     * Enqueue the front-end stylesheets once per request.
+     *
+     * @since  3.0.0
+     * @return void
+     */
+    public function ensure_styles() {
+        if ( $this->styles_enqueued ) {
+            return;
+        }
+
+        $this->styles_enqueued = true;
+
+        $queued = wp_styles()->queue;
+
+        $this->enqueue_styles();
+
+        $this->style_handles = array_diff( wp_styles()->queue, $queued );
+    }
+
+    /**
+     * Enqueue the required frontend styles.
+     *
+     * @since  3.0.0
+     * @return void
+     */
+    public function enqueue_styles() {
+        $wpsl_settings = $this->settings->get_all();
+        
+        // Load from dist folder for production, source folder for development
+        $css_base = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'assets/src/' : 'assets/dist/';
+        $css_ext = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '.css' : '.min.css';
+
+        wp_enqueue_style( 'wpsl-fontello', WPSL_URL . $css_base . 'frontend/css/fontello' . $css_ext, [], WPSL_VERSION_NUM );
+        wp_enqueue_style( 'wpsl-styles', WPSL_URL . $css_base . 'frontend/css/styles' . $css_ext, '', WPSL_VERSION_NUM );
+        wp_enqueue_style( 'wpsl-common', WPSL_URL . $css_base . 'common/css/common' . $css_ext, '', WPSL_VERSION_NUM );
+        wp_enqueue_style( 'wpsl-filters', WPSL_URL . $css_base . 'common/css/filters' . $css_ext, '', WPSL_VERSION_NUM );
+
+        /*
+         * The theme colors. With "Overwrite theme styles" on they load as a normal
+         * stylesheet and win. With it off they load inside a cascade layer, so any
+         * color the theme sets wins, whatever its specificity, and these only
+         * color what the theme leaves alone. The layered copy only exists in dist.
+         */
+        if ( ! empty( $wpsl_settings['appearance']['overwrite_theme_styles'] ) ) {
+            wp_enqueue_style( 'wpsl-colors', WPSL_URL . $css_base . 'common/css/colors' . $css_ext, [ 'wpsl-common' ], WPSL_VERSION_NUM );
+        } else {
+            wp_enqueue_style( 'wpsl-colors', WPSL_URL . 'assets/dist/common/css/colors-layered.min.css', [ 'wpsl-common' ], WPSL_VERSION_NUM );
+        }
+        wp_enqueue_style( 'wpsl-responsive', WPSL_URL . $css_base . 'common/css/responsive' . $css_ext, '', WPSL_VERSION_NUM );
+
+        if ( in_array( $wpsl_settings['api']['active_map_service'], [ 'osm', 'stadia' ], true ) ) {
+            if ( $this->resources->cluster_markers_active() ) {
+                $this->enqueue_cluster_styles();
+            }
+
+            // The GDPR checkpoint loads the CDN stylesheets itself, after consent.
+            if ( wpsl_get_gdpr_handler() === 'none' ) {
+                $leaflet_assets = $this->resources->get_leaflet_assets();
+
+                foreach ( $leaflet_assets['css'] as $asset ) {
+                    wp_enqueue_style( $asset['handle'], $asset['url'], [], $asset['version'] );
+                }
+
+                add_filter( 'style_loader_tag', [ $this, 'add_style_integrity' ], 10, 2 );
+            }
+        } else if ( $wpsl_settings['api']['active_map_service'] == 'mapbox' && wpsl_get_gdpr_handler() === 'none' ) {
+            $mapbox_assets = $this->resources->get_mapbox_assets();
+
+            foreach ( $mapbox_assets['css'] as $asset ) {
+                wp_enqueue_style( $asset['handle'], $asset['url'], [], $asset['version'] );
+            }
+        }
+            
+        $custom_styles = $this->theme_styles->build_custom_style();
+
+        if ( ! empty( $custom_styles ) ) {
+            wp_add_inline_style( 'wpsl-styles', $custom_styles );
+        }
+    }
+
+    /**
+     * Pass section templates to the frontend as wpslTemplateSections.
+     *
+     * @since  3.1.0
+     * @param  string $page_type Either store_locator or store_page.
+     * @return void
+     */
+    private function add_template_sections( $page_type ) {
+        $this->add_inline_data( 'wpslTemplateSections', $this->templates_manager->collect_sections( $page_type ) );
+    }
+
+    /**
+     * Print a localized data object as inline JSON.
+     *
+     * Unlike wp_localize_script(), this does not entity-decode every string,
+     * so escaped text stays escaped. The "var NAME = {...};" output keeps the
+     * format the scripts and the Weglot integration expect.
+     *
+     * @since  3.1.0
+     * @param  string $object_name The JS global to define.
+     * @param  array  $data        The data to encode.
+     * @return void
+     */
+    private function add_inline_data( $object_name, $data ) {
+        /*
+         * On failure, print an empty object to keep the script valid. Not
+         * wp_localize_script(): it would decode the escaped strings again.
+         */
+        $json = wp_json_encode( $data, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES );
+
+        if ( false === $json ) {
+            $json = '{}';
+        }
+
+        wp_add_inline_script( 'wpsl', 'var ' . $object_name . ' = ' . $json . ';', 'before' );
+    }
+
+    /**
+     * Warn when the browser runs a wpsl.min.js from another build.
+     *
+     * A CDN that ignores the ?ver= query string ( CloudFront's default cache
+     * policy ), a full page cache or a script optimizer can keep serving the
+     * previous wpsl.min.js after an update, while the page and its settings
+     * come from the new version. The two don't fit together, so the locator
+     * breaks in ways that look like a plugin bug: no results, settings that
+     * seem ignored, "Cannot read properties of undefined" errors.
+     *
+     * webpack writes the build id to wpsl.asset.php, and the bundle stores the
+     * same id in window.wpsl.build. The check runs here, after the bundle,
+     * and not in it, so it also catches a bundle from before 3.1.1 ( which has
+     * window.wpsl.api but no build ). It runs right after the bundle, before
+     * the map boots, so the warning precedes the errors the mixed files cause.
+     * Only when a script optimizer deferred the bundle does it wait for the
+     * load event. A bundle that never ran leaves no window.wpsl.api and is
+     * ignored: there is nothing to compare.
+     *
+     * The warning is logged for every visitor, so it also ends up in console
+     * output a site owner sends to support. Only users who can purge the caches
+     * get a notice in the locator.
+     *
+     * @since  3.1.1
+     * @return void
+     */
+    private function add_build_check() {
+        $build = wpsl_get_build_id();
+
+        if ( ! $build ) {
+            return;
+        }
+
+        $doc_url = 'https://wpstorelocator.co/document/clear-cdn-cache-after-update/';
+        $notice  = '';
+
+        if ( current_user_can( 'manage_options' ) ) {
+            $notice = '<div class="wpsl-inline-notice" role="status">' .
+                '<div class="wpsl-inline-notice-body">' .
+                    '<p>' . esc_html__( 'Your browser received WP Store Locator scripts from a different plugin version than the one installed. A CDN, page cache or script optimizer is serving outdated files, which stops the store locator from working correctly. Purge those caches to fix it.', 'wp-store-locator' ) . '</p>' .
+                    '<p class="wpsl-inline-notice-cta"><a href="' . esc_url( $doc_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'How to clear the cache', 'wp-store-locator' ) . '</a></p>' .
+                    '<p class="wpsl-inline-notice-meta">' . esc_html__( 'Only administrators see this notice.', 'wp-store-locator' ) . '</p>' .
+                '</div>' .
+                '<button type="button" class="wpsl-inline-notice-close" aria-label="' . esc_attr__( 'Dismiss', 'wp-store-locator' ) . '">' . wpsl_get_svg_icon( 'cross' ) . '</button>' .
+            '</div>';
+        }
+
+        $json = JSON_HEX_TAG | JSON_UNESCAPED_SLASHES;
+
+        $script = '(function() {' .
+            'var expected = ' . wp_json_encode( $build, $json ) . ', notice = ' . wp_json_encode( $notice, $json ) . ';' .
+            'function check() {' .
+                'var wpsl = window.wpsl, search;' .
+                'if ( ! wpsl || ! wpsl.api || wpsl.build === expected ) { return; }' .
+                'console.warn( "WP Store Locator: the installed plugin is build " + expected + ", but the browser received scripts from " + ( wpsl.build ? "build " + wpsl.build : "a version before 3.1.1" ) + ". A CDN, page cache or script optimizer is serving outdated files, which breaks the store locator. Purge those caches. See " + ' . wp_json_encode( $doc_url, $json ) . ' );' .
+                'search = document.querySelector( "#wpsl-wrap .wpsl-search" );' .
+                'if ( notice && search && ! search.querySelector( ".wpsl-inline-notice" ) ) {' .
+                    'search.insertAdjacentHTML( "beforeend", notice );' .
+                    'search.querySelector( ".wpsl-inline-notice-close" ).addEventListener( "click", function() { this.parentNode.remove(); } );' .
+                '}' .
+            '}' .
+            'if ( window.wpsl && window.wpsl.api || document.readyState === "complete" ) { check(); } else { window.addEventListener( "load", check ); }' .
+        '})();';
+
+        wp_add_inline_script( 'wpsl', $script, 'after' );
+    }
+
+    /**
+     * Enqueue the required frontend scripts.
+     *
+     * @since  3.0.0
+     * @return void
+     */
+    public function enqueue_scripts() {
+        $load_scripts = $this->state->get_load_scripts();
+
+        // Only load the required js files on the store locator page or individual store pages.
+        if ( empty( $load_scripts ) ) {
+            return;
+        }
+                
+        $wpsl_settings = $this->settings->get_all();
+        
+        // Load from dist folder for production, source folder for development
+        $js_path = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'assets/src/frontend/js/wpsl.js' : 'assets/dist/frontend/js/wpsl.min.js';
+
+        // Register the scripts
+        wp_enqueue_script( 'wpsl', WPSL_URL . $js_path, [ 'jquery', 'wp-hooks' ], WPSL_VERSION_NUM, true );
+
+        // A built bundle gets the build check, the source files in development mode get type="module".
+        if ( ! defined( 'SCRIPT_DEBUG' ) || ! SCRIPT_DEBUG ) {
+            $this->add_build_check();
+        } else {
+            add_filter( 'script_loader_tag', function( $tag, $handle ) {
+                if ( 'wpsl' === $handle ) {
+                    /*
+                     * $tag also holds the handle's inline scripts. Only the tag
+                     * loading the file becomes a module: an inline script turned
+                     * into one would keep its vars, like wpslTemplateSections,
+                     * out of the global scope.
+                     */
+                    return preg_replace( '/<script(?=[^>]*\ssrc=)/', '<script type="module"', $tag );
+                }
+
+                return $tag;
+            }, 10, 2 );
+        }
+
+        // required to render the templates
+        wp_enqueue_script( 'underscore' );
+
+        /*
+         * Runtime marker labels: the label text rules and the 
+         * script that numbers the markers to match the result list.
+         */
+        $label_base = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? 'assets/src/' : 'assets/dist/';
+        $label_ext  = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '.js' : '.min.js';
+
+        wp_enqueue_script( 'wpsl-marker-label', WPSL_URL . $label_base . 'common/wpsl-marker-label' . $label_ext, [], WPSL_VERSION_NUM, true );
+        wp_enqueue_script( 'wpsl-marker-labels', WPSL_URL . $label_base . 'frontend/js/wpsl-marker-labels' . $label_ext, [ 'jquery', 'wp-hooks', 'wpsl', 'wpsl-marker-label' ], WPSL_VERSION_NUM, true );
+
+        // Load the correct map script based on the active map service
+        switch ( wpsl_get_active_map_service() ) {
+            case 'gmaps':
+                /**
+                 * Check if we need to deregister other Google Maps scripts loaded
+                 * by other plugins, or the current theme?
+                 *
+                 * This in some cases can break the store locator map.
+                 */
+                if ( $wpsl_settings['tools']['deregister_gmaps'] ) {
+                    wpsl_deregister_other_gmaps();
+                }
+            
+                if ( wpsl_get_gdpr_handler() == 'none' ) {
+                    wp_add_inline_script( 'wpsl', wpsl_gmaps_bootstrap(), 'after' );
+                    add_action( 'wp_footer', 'wpsl_gmaps_fire_callbacks', 25 );
+                } elseif ( $this->resources->gdpr_defers_assets() ) {
+                    add_action( 'wp_footer', 'wpsl_gmaps_publish_callbacks', 25 );
+                }
+
+                // Add the MarkerClusterer script if enabled
+                if ( $this->resources->cluster_markers_active() ) {
+                    //See https://github.com/googlemaps/js-markerclusterer 
+                    wp_enqueue_script( 'wpsl-cluster', WPSL_URL . 'assets/vendor/markerclusterer/google/index.min.js', [ 'wpsl' ], '2.6.2', true );
+                    wp_enqueue_script( 'wpsl-d3-color', WPSL_URL . 'assets/vendor/d3/d3-color.min.js', [ 'wpsl-cluster' ], '3.1.0', true );
+                    wp_enqueue_script( 'wpsl-d3-interpolate', WPSL_URL . 'assets/vendor/d3/d3-interpolate.min.js', [ 'wpsl-cluster' ], '3.0.1', true );
+                }
+                break;
+            case 'osm':
+            case 'stadia':
+                /**
+                 * With a GDPR handler active nothing may hit the CDN before the
+                 * visitor consents, so the whole Leaflet chain is deferred to
+                 * the checkpoint, which loads it from wpslSettings.api.assets.
+                 */
+                if ( wpsl_get_gdpr_handler() !== 'none' ) {
+                    break;
+                }
+
+                $assets = $this->resources->get_leaflet_assets();
+
+                foreach ( $assets['js'] as $asset ) {
+                    wp_enqueue_script( $asset['handle'], $asset['url'], $asset['deps'], $asset['version'], true );
+                }
+
+                add_filter( 'script_loader_tag', [ $this, 'add_script_integrity' ], 10, 2 );
+                break;
+            case 'mapbox':
+                // Only load the Mapbox API if no GDPR consent handling is required
+                if ( wpsl_get_gdpr_handler() === 'none' ) {
+                    $assets = $this->resources->get_mapbox_assets();
+
+                    foreach ( $assets['js'] as $asset ) {
+                        wp_enqueue_script( $asset['handle'], $asset['url'], $asset['deps'], $asset['version'], true );
+                    }
+                }
+
+                break;
+            default:
+                break;
+        }
+
+        wp_enqueue_script( 'jquery-ui-tabs' );
+
+        // Get data from State Manager
+        $store_map_data = $this->state->get_all_store_map_data();
+        
+        // Determine page type based on loaded scripts
+        $page_type = in_array( 'store_locator', $load_scripts ) ? 'store_locator' : 'store_page';
+
+        $localized_data = $this->resources->get_localized_data( $page_type );
+    
+        // Localize the scripts
+        wp_localize_script( 'wpsl', 'wpslSettings', $localized_data );
+        $this->add_template_sections( $page_type );
+
+        // Both page types boot a map, and the key gate reads these messages.
+        wp_localize_script( 'wpsl', 'wpslApiErrors', wpsl_api_error_messages() );
+
+        if ( in_array( 'store_locator', $load_scripts ) ) {
+            $this->add_inline_data( 'wpslLabels', $this->resources->labels() );
+            wp_localize_script( 'wpsl', 'wpslGeolocationErrors', $this->resources->geolocation_errors() );
+        } elseif ( in_array( 'store_page', $load_scripts ) ) {
+            $this->add_inline_data( 'wpslLabels', [ 'clusterTitle' => $this->resources->cluster_label() ] );
+        }
+
+        //Add store map data if available.
+        if ( ! empty( $store_map_data ) ) {
+            foreach ( $store_map_data as $map_index => $map ) {
+                wp_localize_script( 'wpsl', 'wpslMap_' . $map_index, $map );
+            }
+        }
+
+        // Enqueue all scripts that were added to the load_scripts array via state manager
+        foreach ( $this->state->get_load_scripts() as $script ) {
+            wp_enqueue_script( $script );
+        }
+    }
+
+    /**
+     * Create the css rules based on the height / max-width that is set on the settings page.
+     *
+     * @since  1.0.0
+     * @param  array $shortcode_atts Optional shortcode attributes to check for category filter type
+     * @return string $css The custom css rules
+     */
+    public function get_custom_css( $shortcode_atts = [] ) {
+        $thumb_size = $this->store_data->get_store_thumb_size();
+        $appearance = $this->settings->get_group( 'appearance' );
+        $dimensions = $this->settings->get( 'appearance', 'dimensions' );
+        $search     = $this->settings->get_group( 'search' );
+
+        // Get shortcode attributes from Shortcodes service if not passed as parameter
+        if ( empty( $shortcode_atts ) ) {
+            $shortcode_atts = $this->container->get( 'shortcodes' )->atts;
+        }
+
+        // Use the actual template being rendered, not just the settings
+        $active_template = isset( $shortcode_atts['template'] ) && $shortcode_atts['template'] ? $shortcode_atts['template'] : $appearance['template_id'];
+
+        $template_details = wpsl_get_service( 'template_loader' )->get_details( $active_template );
+        $has_panel        = isset( $template_details['has_panel'] ) && $template_details['has_panel'];
+
+        $css = '<style>' . "\r\n";
+
+        if ( isset( $thumb_size[0] ) && is_numeric( $thumb_size[0] ) && isset( $thumb_size[1] ) && is_numeric( $thumb_size[1] ) ) {
+            $css .= "\t" . "#wpsl-stores .wpsl-store-thumb { height:" . esc_attr( $thumb_size[0] ) . "px !important; width:" . esc_attr( $thumb_size[1] ) . "px !important; }" . "\r\n";
+        }
+
+        /**
+         * If the category dropdown is enabled then we
+         * make it the same width as the search input field.
+         *
+         * The enabled state and the filter type both honor the [wpsl]
+         * shortcode attributes ( category_filter / category_filter_type ),
+         * so this matches what is_category_enabled() actually renders.
+         */
+        $category_type = ( isset( $shortcode_atts['category_filter_type'] ) && $shortcode_atts['category_filter_type'] )
+            ? $shortcode_atts['category_filter_type']
+            : $search['category_filter_type'];
+
+        if ( wpsl_get_service( 'template_filters' )->is_category_enabled() && $category_type == 'dropdown' ) {
+            $cat_elem = ',#wpsl-category .wpsl-dropdown';
+        } else {
+            $cat_elem = '';
+        }
+
+        switch ( $active_template ) {
+            case 'default':
+                $css .= $this->get_search_input_css( $dimensions, $cat_elem );
+                $css .= $this->get_combined_height_css( $dimensions );
+                $css .= $this->get_mapbox_autocomplete_css( $search, $dimensions );
+                break;
+            case 'horizontal':
+                $heights = wpsl_dimension_heights( $dimensions, 'horizontal' );
+
+                $css .= $this->get_search_input_css( $dimensions, $cat_elem );
+                $css .= "\t" . "#wpsl-map {height:" . esc_attr( $heights['map_height'] ) . "px !important;}" . "\r\n";
+
+                if ( $heights['show_all_results'] ) {
+                    $css .= "\t" . "#wpsl-stores, #wpsl-direction-details { height:auto !important; }" . "\r\n";
+                } else {
+                    $css .= "\t" . "#wpsl-stores, #wpsl-direction-details { height:" . esc_attr( $heights['results_height'] ) . "px !important; }" . "\r\n";
+                }
+
+                $css .= $this->get_mapbox_autocomplete_css( $search, $dimensions );
+                break;
+            case 'vertical':
+                $css .= $this->get_panel_height_css( $dimensions );
+                break;
+            default:
+                if ( $has_panel ) {
+                    $css .= $this->get_panel_height_css( $dimensions );
+                } else {
+                    $css .= $this->get_search_input_css( $dimensions, $cat_elem );
+                    $css .= $this->get_combined_height_css( $dimensions );
+                }
+                break;
+        }
+        
+        // Add the GDPR artwork for the active map service whenever the map is
+        // waiting on consent, whoever is asking for it.
+        $gdpr = $this->settings->get_group( 'gdpr' );
+
+        if ( in_array( wpsl_get_gdpr_handler(), [ 'wpsl', 'complianz' ], true ) ) {
+            $map_service = wpsl_get_active_map_service();
+            $gdpr_background = apply_filters( 'wpsl_gdpr_background', WPSL_URL . 'assets/img/frontend/gdpr/' . esc_attr( $map_service ) . '.gif' );
+
+            if ( wpsl_get_gdpr_handler() == 'wpsl' ) {
+                $css .= "\t" . ".wpsl-gdpr-content { background: url( '" . esc_url( $gdpr_background ) . "' ) center top no-repeat; background-size: cover; }" . "\r\n";
+            } else {
+                $canvas = '.wpsl-canvas-' . esc_attr( $map_service );
+                $idle   = $canvas . '.cmplz-placeholder-element:not(.cmplz-activated)';
+
+                $placeholder = $this->get_complianz_placeholder( $map_service, $gdpr_background );
+
+                $css .= "\t" . $idle . " { background: url( '" . esc_url( $placeholder['url'] ) . "' ) center center no-repeat; background-size: " . $placeholder['size'] . "; display: flex; align-items: center; justify-content: center; }" . "\r\n";
+                $css .= "\t" . $idle . " .cmplz-blocked-content-notice { max-width: 400px; padding: 20px; font-size: 14px; font-weight: normal; background-color: #fff; color: #000; border: none; border-radius: 3px; text-align: center; cursor: pointer; }" . "\r\n";
+            }
+        }
+        
+        $css .= '</style>' . "\r\n";
+
+        return $css;
+    }
+    
+    /**
+     * Pick the artwork for the Complianz placeholder.
+     *
+     * @since  3.0.0
+     * @param  string      $map_service The active map service.
+     * @param  string|null $fallback    The checkpoint artwork URL, resolved here when omitted.
+     * @return array{url: string, size: string}
+     */
+    public function get_complianz_placeholder( $map_service, $fallback = null ) {
+        if ( null === $fallback ) {
+            $fallback = apply_filters( 'wpsl_gdpr_background', WPSL_URL . 'assets/img/frontend/gdpr/' . esc_attr( $map_service ) . '.gif' );
+        }
+
+        if ( function_exists( 'cmplz_default_placeholder' ) ) {
+            $placeholder = [
+                'url'  => cmplz_default_placeholder( 'google-maps' ),
+                'size' => 'cover',
+            ];
+        } else {
+            $placeholder = [
+                'url'  => $fallback,
+                'size' => 'auto',
+            ];
+        }
+
+        /**
+         * Filter the Complianz placeholder artwork.
+         *
+         * @since 3.0.0
+         * @param array  $placeholder url and background-size for the canvas
+         * @param string $map_service The active map service
+         */
+        return apply_filters( 'wpsl_complianz_placeholder', $placeholder, $map_service );
+    }
+
+    /**
+     * Get the height rule for templates where the map and the results share
+     * one height, as they did in 2.x.
+     *
+     * @since  3.0.0
+     * @param  array $dimensions The dimensions settings
+     * @return string
+     */
+    private function get_combined_height_css( $dimensions ) {
+        $heights = wpsl_dimension_heights( $dimensions, 'default' );
+
+        if ( ! $heights['combined_height'] ) {
+            return '';
+        }
+
+        return "\t" . "#wpsl-stores, #wpsl-direction-details, #wpsl-map { height:" . esc_attr( $heights['combined_height'] ) . "px !important; }" . "\r\n";
+    }
+
+    /**
+     * Get the height rule for the panel templates.
+     *
+     * @since  3.0.0
+     * @param  array $dimensions The dimensions settings
+     * @return string
+     */
+    private function get_panel_height_css( $dimensions ) {
+        $heights = wpsl_dimension_heights( $dimensions, 'vertical' );
+        $css     = "\t" . ".wpsl-flex #wpsl-panel, .wpsl-flex #wpsl-stores, .wpsl-flex #wpsl-map { height:" . esc_attr( $heights['sl_height'] ) . "px !important; }" . "\r\n";
+
+        /*
+         * Up to 675px the panel sits above the map ( see responsive.css ), so a
+         * fixed height leaves a large gap under a short results list. Let it
+         * follow its content instead, capped at the saved height so a long list
+         * still scrolls inside the panel.
+         */
+        $css .= "\t" . "@media (max-width: 675px) { #wpsl-wrap.wpsl-flex:not(.wpsl-full-page-template) #wpsl-panel { height:auto !important; max-height:" . esc_attr( $heights['sl_height'] ) . "px; } }" . "\r\n";
+
+        return $css;
+    }
+
+    /**
+     * Get CSS rules for search input and label widths.
+     *
+     * @since  3.0.0
+     * @param  array  $dimensions          The dimensions settings
+     * @param  string $cat_elem            The category element selector
+     * @param  bool   $include_label_width Whether to output the label width rule. Default true.
+     * @return string The CSS rules for search input and labels
+     */
+    private function get_search_input_css( $dimensions, $cat_elem, $include_label_width = true ) {
+        $css = '';
+        $search_width_mode = isset( $dimensions['search_width_mode'] ) ? $dimensions['search_width_mode'] : 'custom';
+
+        if ( $include_label_width && $this->settings->get( 'tools', 'disable_v3_css' ) && isset( $dimensions['label_width'] ) && $dimensions['label_width'] ) {
+            $css .= "\t" . ".wpsl-input label, #wpsl-radius label, #wpsl-category label { width:" . esc_attr( $dimensions['label_width'] ) . "px; }" . "\r\n";
+        }
+
+        /*
+         * 'Default' is the v2 width ( 179px ), the same one a site gets that
+         * never saved the mode. It used to print nothing, which left the field
+         * on the browser's own input width.
+         */
+        $search_width = ( $search_width_mode === 'default' ) ? 179 : $dimensions['search_width'];
+
+        $css .= "\t" . "#wpsl-search-input" . $cat_elem . " { width:" . esc_attr( $search_width ) . "px; }" . "\r\n";
+
+        return $css;
+    }
+
+    /**
+     * Get CSS rules for Mapbox autocomplete width.
+     * Only outputs when Mapbox is the active map service AND autocomplete is enabled.
+     *
+     * @since  3.0.0
+     * @param  array $search     The search settings
+     * @param  array $dimensions The dimensions settings
+     * @return string The CSS rules for Mapbox autocomplete or empty string
+     */
+    private function get_mapbox_autocomplete_css( $search, $dimensions ) {
+        if ( $this->settings->get( 'api', 'active_map_service' ) !== 'mapbox' || ! $search['autocomplete'] ) {
+            return '';
+        }
+
+        $search_width_mode = isset( $dimensions['search_width_mode'] ) ? $dimensions['search_width_mode'] : 'custom';
+        $width             = ( ( $search_width_mode === 'default' ) ? 179 : absint( $dimensions['search_width'] ) ) . 'px';
+
+        // Above the 570px breakpoint only, so it doesn't beat the full-width
+        // rule responsive.css gives the geocoder on small screens.
+        return "\t" . "@media (min-width: 571px) { #mapbox-autocomplete, #mapbox-autocomplete .mapboxgl-ctrl-geocoder--input, #mapbox-autocomplete .mapboxgl-ctrl-geocoder, #mapbox-autocomplete input[type=text] { width:" . esc_attr( $width ) . " !important; min-width:" . esc_attr( $width ) . " !important; max-width:" . esc_attr( $width ) . " !important; } }" . "\r\n";
+    }
+
+    /**
+     * Collect the CSS classes that are placed on the outer store locator div.
+     *
+     * @since  2.0.0
+     * @param  array  $shortcode_atts
+     * @return string $classes The custom CSS rules
+     */
+    public function get_css_classes( $shortcode_atts = [] ) {
+        $wpsl_settings = $this->settings->get_all();
+        $appearance    = $this->settings->get_group( 'appearance' );
+        $search        = $this->settings->get_group( 'search' );
+
+        $classes     = [];
+        $wp_template = get_option( 'template' );
+
+        // Get shortcode attributes from Shortcodes service if not passed as parameter
+        if ( empty( $shortcode_atts ) ) {
+            $shortcode_atts = $this->container->get( 'shortcodes' )->atts;
+        }
+
+        if ( $appearance['template_id'] === 'horizontal' ) {
+            $classes[] = 'wpsl-v3-result-columns';
+        }
+
+        /**
+         * Resolve the effective filter state, so the layout classes honor the
+         * [wpsl] shortcode attributes ( category_filter / radius_filter /
+         * results_filter ) and match what the templates actually render,
+         * instead of only looking at the settings page values.
+         */
+        $template_filters = wpsl_get_service( 'template_filters' );
+        $category_enabled = $template_filters->is_category_enabled();
+        $radius_enabled   = $template_filters->is_radius_enabled();
+        $results_enabled  = $template_filters->is_results_enabled();
+
+        // The effective category filter type ( shortcode attribute wins ).
+        $category_type = ( isset( $shortcode_atts['category_filter_type'] ) && $shortcode_atts['category_filter_type'] )
+            ? $shortcode_atts['category_filter_type']
+            : $search['category_filter_type'];
+
+        if ( $category_enabled && $results_enabled && ! $radius_enabled ) {
+            $classes[] = 'wpsl-cat-results-filter';
+        }
+
+        // checkboxes class toevoegen?
+        if ( ! $category_enabled && ! $results_enabled && ! $radius_enabled ) {
+            $classes[] = 'wpsl-no-filters';
+        }
+
+        if ( $category_enabled && $category_type == 'checkboxes' ) {
+            $classes[] = 'wpsl-checkboxes-enabled';
+        }
+
+        if ( $results_enabled && ! $category_enabled && ! $radius_enabled ) {
+            $classes[] = 'wpsl-results-only';
+        }
+
+        // Adjust the styling of the store locator for the default WP 5.x themes.
+        if ( $wp_template === 'twentynineteen' ) {
+            $classes[] = 'wpsl-twentynineteen';
+        }
+
+        if ( $wp_template === 'twentytwenty' ) {
+            $classes[] = 'wpsl-twentytwenty';
+        }
+
+        // If we only show the category filters, then we use this class to hide the input button.
+        if ( $template_filters->is_category_filter_only() ) {
+            $classes[] = 'wpsl-cat-autosubmit';
+            $classes[] = 'wpsl-cat-filter-only';
+        }
+
+        $classes = apply_filters( 'wpsl_template_css_classes', $classes );
+
+        if ( ! empty( $classes ) ) {
+            return join( ' ', $classes );
+        }
+    }
+
+    /**
+     * Collect potential classes to be placed 
+     * on the outer #wpsl-wrap div.
+     * 
+     * @since  3.0.0
+     * @param  array $shortcode_atts The shortcode attributes. Falls back to the Shortcodes service when empty.
+     * @return string|null The class attribute for the outer div, or null if no classes.
+     */
+    public function get_outer_class( $shortcode_atts = [] ) {
+        $classes = $this->get_outer_classes( $shortcode_atts );
+
+        if ( ! empty( $classes ) ) {
+            return 'class="' . esc_attr( join( ' ', $classes ) ) . '"';
+        }
+    }
+
+    /**
+     * Collect the classes for the outer #wpsl-wrap div as a list.
+     *
+     * @since  3.0.0
+     * @param  array $shortcode_atts The shortcode attributes. Falls back to the Shortcodes service when empty.
+     * @return array The classes for the outer div.
+     */
+    public function get_outer_classes( $shortcode_atts = [] ) {
+        $classes = [];
+
+        // Get shortcode attributes from Shortcodes service if not passed as parameter
+        if ( empty( $shortcode_atts ) ) {
+            $shortcode_atts = $this->container->get( 'shortcodes' )->atts;
+        }
+
+        // Check if we need to use the shortcode template ID, or the one set on the WPSL settings page.
+        /*
+         * The shortcode attribute is validated in check_sl_shortcode_atts(), but
+         * a caller ( a v2 custom template ) can pass its own attributes, so only
+         * a registered template id is used here too.
+         */
+        if ( isset( $shortcode_atts['template'] ) && $shortcode_atts['template'] && in_array( $shortcode_atts['template'], array_column( wpsl_get_templates(), 'id' ), true ) )  {
+            $wpsl_template = $shortcode_atts['template'];
+        } else {
+            $wpsl_template = $this->settings->get( 'appearance', 'template_id' );
+        }
+
+        $classes[] = 'wpsl-' . $wpsl_template .'-template';
+
+        $template_details = wpsl_get_service( 'template_loader' )->get_details( $wpsl_template );
+        $has_panel        = isset( $template_details['has_panel'] ) && $template_details['has_panel'];
+
+        if ( $has_panel ) {
+            $classes[] = 'wpsl-flex';
+            $classes[] = 'wpsl-has-panel';
+
+            if ( $this->settings->get( 'map', 'show_credits' ) ) {
+                $classes[] = 'wpsl-has-credits';
+            }
+        }
+
+        /**
+         * If the hours can not be expanded, 
+         * we add the static class to change 
+         * the icon location.
+         */
+        if ( ! $this->settings->get( 'ux', 'show_hour_status' ) ) {
+            $classes[] = 'wpsl-static-hours';
+        }
+
+        /**
+         * Check if we need to set the .wpsl-gdpr-checkpoint class
+         * on the outer div to make sure the GDPR checkpoint is shown
+         * in the correct location.
+         */
+        if ( in_array( wpsl_get_gdpr_handler(), [ 'wpsl', 'complianz' ], true ) ) {
+            $classes[] = 'wpsl-gdpr-checkpoint';
+        }
+
+        /**
+         * The credits belong to a loaded map, so they wait for one whoever is
+         * asking for consent - Borlabs included, which gets no checkpoint class
+         * because it blocks the map script itself and leaves the search and the
+         * panel usable. Dropped again when the map bootstrap finishes.
+         */
+        if ( wpsl_get_gdpr_handler() !== 'none' && $this->settings->get( 'map', 'show_credits' ) ) {
+            $classes[] = 'wpsl-credits-gated';
+        }
+
+        if ( $this->settings->get( 'api', 'active_map_service' ) == 'mapbox' && $this->settings->get( 'search', 'autocomplete' ) ) {
+            $classes[] = 'wpsl-mapbox-autocomplete';
+        }
+
+        if ( $this->settings->get( 'api', 'active_map_service' ) == 'stadia' && $this->settings->get( 'search', 'autocomplete' ) ) {
+            $classes[] = 'wpsl-stadia-autocomplete';
+        }
+
+        if ( $this->settings->get( 'search', 'input_only' ) ) {
+            $classes[] = 'wpsl-search-input-only';
+        }
+
+        // Only the search bar and the map are shown, see Filters::is_results_list_hidden().
+        if ( wpsl_get_service( 'template_filters' )->is_results_list_hidden() ) {
+            $classes[] = 'wpsl-hide-list';
+        }
+
+        // Are we using icons?
+        $icons_settings = $this->settings->get( 'appearance', 'icons' );
+
+        if ( ! empty( $icons_settings['enabled'] ) ) {
+            $classes[] = 'wpsl-has-icons';
+        }
+
+        // Are the action links styled as buttons / is the details link enabled?
+        $cta_settings = $this->settings->get( 'appearance', 'cta' );
+
+        if ( ! empty( $cta_settings['enabled'] ) ) {
+            $classes[] = 'wpsl-styled-cta';
+        }
+
+        if ( ! empty( $cta_settings['details'] ) ) {
+            $classes[] = 'wpsl-cta-details';
+        }
+
+        if ( $this->settings->get( 'search', 'search_method' ) === 'name' ) {
+            $classes[] = 'wpsl-names';
+        }
+
+        return apply_filters( 'wpsl_template_outer_classes', $classes );
+    }
+
+    /**
+     * Output the Mapbox autocomplete container if conditions are met.
+     * 
+     * Only outputs when Mapbox is the active map service and autocomplete is enabled.
+     * 
+     * @since  3.0.0
+     * @return string The autocomplete div HTML or empty string
+     */
+    public function maybe_output_mapbox_autocomplete() {
+        if ( $this->settings->get( 'api', 'active_map_service' ) === 'mapbox' && $this->settings->get( 'search', 'autocomplete' ) ) {
+            return '<div id="mapbox-autocomplete"></div>';
+        }
+
+        return '';
+    }
+
+    /**
+     * Add crossorigin to the Leaflet chain CDN styles so Subresource Integrity can be enforced.
+     *
+     * @since  3.0.0
+     * @param  string $html   The link tag.
+     * @param  string $handle The style handle.
+     * @return string
+     */
+    public function add_style_integrity( $html, $handle ) {
+        foreach ( $this->resources->get_leaflet_assets()['css'] as $asset ) {
+            if ( $asset['handle'] === $handle && $asset['integrity'] ) {
+                return str_replace( "rel='stylesheet'", "rel='stylesheet' integrity='" . esc_attr( $asset['integrity'] ) . "' crossorigin='anonymous'", $html );
+            }
+        }
+
+        return $html;
+    }
+
+    /**
+     * Add crossorigin to the Leaflet chain CDN scripts so Subresource Integrity can be enforced.
+     *
+     * @since  3.0.0
+     * @param  string $tag    The script tag.
+     * @param  string $handle The script handle.
+     * @return string
+     */
+    public function add_script_integrity( $tag, $handle ) {
+        foreach ( $this->resources->get_leaflet_assets()['js'] as $asset ) {
+            if ( $asset['handle'] === $handle && $asset['integrity'] ) {
+                return str_replace( '<script ', '<script integrity="' . esc_attr( $asset['integrity'] ) . '" crossorigin="anonymous" ', $tag );
+            }
+        }
+
+        return $tag;
+    }
+
+    /**
+     * Add a script to the load_scripts array via state manager.
+     *
+     * @since  3.0.0
+     * @param  string $script The script handle to add
+     * @return void
+     */
+    public function add_script( $script ) {
+        $this->state->add_script( $script );
+    }
+}
